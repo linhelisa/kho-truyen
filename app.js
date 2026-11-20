@@ -32,6 +32,11 @@ const norm = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const safeUrl = (u) => (/^https:\/\//i.test(u || '') ? u : '#');
 
+// Tài khoản dùng tên đăng nhập (không có email thật) được lưu dạng ten@kho-truyen.local
+const LOGIN_DOMAIN = '@kho-truyen.local';
+const toLoginEmail = (v) => { const s = String(v || '').trim().toLowerCase(); return s.includes('@') ? s : s + LOGIN_DOMAIN; };
+const displayName = (email) => (email || '').endsWith(LOGIN_DOMAIN) ? email.slice(0, -LOGIN_DOMAIN.length) : email;
+
 function toast(msg, err = false) {
   const t = $('#toast');
   t.textContent = msg;
@@ -82,17 +87,36 @@ function showLogin(sentTo) {
   if (sentTo) {
     card(`<h1>Kiểm tra email</h1>
       <p>Đã gửi link đăng nhập tới <b>${esc(sentTo)}</b>. Mở email đó và bấm link là vào app. Không thấy thì xem thêm mục Spam.</p>
-      <button class="btn btn-ghost" id="again">Dùng email khác</button>`);
+      <button class="btn btn-ghost" id="again">Quay lại</button>`);
     $('#again').onclick = () => showLogin();
     return;
   }
   card(`<h1>Kho Truyện</h1>
-    <p>Nhập email đã được Admin cấp quyền. App sẽ gửi link đăng nhập vào email đó, không cần mật khẩu.</p>
-    <form id="loginForm">
+    <p>Đăng nhập bằng tên đăng nhập và mật khẩu Admin đã cấp.</p>
+    <form id="pwForm">
+      <label class="sr" for="loginUser">Tên đăng nhập</label>
+      <input class="field" id="loginUser" required placeholder="Tên đăng nhập" autocomplete="username" autocapitalize="none" spellcheck="false">
+      <label class="sr" for="loginPass">Mật khẩu</label>
+      <input class="field" id="loginPass" type="password" required placeholder="Mật khẩu" autocomplete="current-password">
+      <button class="btn btn-ink" type="submit" id="pwBtn">Đăng nhập</button>
+    </form>
+    <button class="mini" id="toEmail" style="align-self:center">Admin: đăng nhập bằng link gửi qua email</button>
+    <form id="loginForm" hidden>
       <label class="sr" for="loginEmail">Email</label>
       <input class="field" id="loginEmail" type="email" required placeholder="ten@gmail.com" autocomplete="email">
       <button class="btn btn-ink" type="submit" id="loginBtn">Gửi link đăng nhập</button>
     </form>`);
+  $('#toEmail').onclick = () => { $('#pwForm').hidden = true; $('#toEmail').hidden = true; $('#loginForm').hidden = false; $('#loginEmail').focus(); };
+  $('#pwForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const btn = $('#pwBtn');
+    btn.disabled = true; btn.textContent = 'Đang đăng nhập…';
+    const { error } = await sb.auth.signInWithPassword({ email: toLoginEmail($('#loginUser').value), password: $('#loginPass').value });
+    if (error) {
+      toast(/invalid login credentials/i.test(error.message) ? 'Sai tên đăng nhập hoặc mật khẩu.' : viErr(error), true);
+      btn.disabled = false; btn.textContent = 'Đăng nhập';
+    }
+  };
   $('#loginForm').onsubmit = async (e) => {
     e.preventDefault();
     const email = $('#loginEmail').value.trim().toLowerCase();
@@ -109,7 +133,7 @@ function showLogin(sentTo) {
 
 function showNoAccess() {
   card(`<h1>Chưa có quyền</h1>
-    <p>Email <b>${esc(S.email)}</b> chưa được thêm vào app. Nhờ Admin thêm email này ở tab “Thành viên”, rồi tải lại trang.</p>
+    <p>Tài khoản <b>${esc(displayName(S.email))}</b> chưa được cấp quyền vào app. Nhờ Admin thêm ở tab “Thành viên”, rồi tải lại trang.</p>
     <button class="btn btn-ghost" id="logout">Đăng xuất</button>`);
   $('#logout').onclick = logout;
 }
@@ -132,7 +156,7 @@ function showApp() {
         <div class="user">
           <span class="live" id="live" title="Tự cập nhật khi có người up truyện">Trực tiếp</span>
           <span class="role ${isAdmin() ? 'admin' : ''}">${isAdmin() ? 'Admin' : 'Biên tập viên'}</span>
-          <b title="${esc(S.email)}">${esc(S.email)}</b>
+          <b title="${esc(S.email)}">${esc(displayName(S.email))}</b>
           <button class="mini" id="logout">Đăng xuất</button>
         </div>
       </div>
@@ -380,8 +404,8 @@ function agendaHTML() {
 function membersHTML() {
   return `<div class="members">
     <form class="madd" id="madd" autocomplete="off">
-      <label class="sr" for="m-email">Email</label>
-      <input class="field" id="m-email" type="email" required placeholder="email@gmail.com">
+      <label class="sr" for="m-email">Tên đăng nhập hoặc email</label>
+      <input class="field" id="m-email" required placeholder="Tên đăng nhập hoặc email" autocapitalize="none" spellcheck="false">
       <label class="sr" for="m-role">Vai trò</label>
       <select class="field" id="m-role"><option value="editor">Biên tập viên</option><option value="admin">Admin</option></select>
       <button class="btn btn-ink" type="submit">Thêm</button>
@@ -389,7 +413,7 @@ function membersHTML() {
     <ul class="list">${S.members.map((m) => {
       const me = m.email === S.email;
       return `<li class="mrow" data-email="${esc(m.email)}">
-        <span class="email">${esc(m.email)}${me ? ' (bạn)' : ''}<small>Thêm ngày ${fmt(localDate(m.added_at))}</small></span>
+        <span class="email">${esc(displayName(m.email))}${me ? ' (bạn)' : ''}<small>Thêm ngày ${fmt(localDate(m.added_at))}</small></span>
         <span><label class="sr" for="r-${esc(m.email)}">Vai trò</label>
           <select class="field" id="r-${esc(m.email)}" data-role ${me ? 'disabled title="Không tự đổi vai trò của chính mình"' : ''}>
             <option value="editor" ${m.role === 'editor' ? 'selected' : ''}>Biên tập viên</option>
@@ -398,7 +422,9 @@ function membersHTML() {
         <span class="acts">${me ? '' : `<button class="act danger ${S.armed === m.email ? 'armed' : ''}" data-mdel>${S.armed === m.email ? 'Bấm lần nữa để xoá' : 'Xoá'}</button>`}</span>
       </li>`; }).join('')}</ul>
     <div class="howto"><b>Cách cho người mới vào app</b>
-      <ol><li>Thêm email của họ ở trên, chọn vai trò.</li><li>Gửi họ link app này.</li><li>Họ nhập email, mở hộp thư và bấm link đăng nhập là vào.</li></ol>
+      <ol><li>Supabase → Authentication → Users → <b>Add user</b> → <b>Create new user</b>: email gõ <code>tên-đăng-nhập@kho-truyen.local</code>, đặt mật khẩu, tick <b>Auto Confirm User</b>.</li>
+        <li>Thêm tên đăng nhập đó ở ô phía trên, chọn vai trò.</li>
+        <li>Gửi họ link app + tên đăng nhập + mật khẩu.</li></ol>
       Xoá một người khỏi danh sách thì lần mở app tiếp theo họ sẽ không xem được gì nữa.
     </div>
   </div>`;
@@ -494,7 +520,7 @@ function wirePanel() {
       const { error } = await sb.from('members').delete().eq('email', email);
       if (error) { toast(viErr(error), true); return; }
       S.members = S.members.filter((m) => m.email !== email);
-      refresh(); toast(`Đã xoá ${email} khỏi app`);
+      refresh(); toast(`Đã xoá ${displayName(email)} khỏi app`);
       return;
     }
     const row = el.closest('.row'); if (!row) return;
@@ -512,7 +538,7 @@ function wirePanel() {
       const { error } = await sb.from('members').update({ role: el.value }).eq('email', email);
       if (error) { toast(viErr(error), true); await loadMembers(); refresh(); return; }
       const m = S.members.find((x) => x.email === email); if (m) m.role = el.value;
-      toast(`${email} giờ là ${el.value === 'admin' ? 'Admin' : 'Biên tập viên'}`);
+      toast(`${displayName(email)} giờ là ${el.value === 'admin' ? 'Admin' : 'Biên tập viên'}`);
     }
   });
 
@@ -524,13 +550,13 @@ function wirePanel() {
   panel.addEventListener('submit', async (e) => {
     if (e.target.id !== 'madd') return;
     e.preventDefault();
-    const email = $('#m-email').value.trim().toLowerCase();
+    const email = toLoginEmail($('#m-email').value);
     const role = $('#m-role').value;
     if (S.members.some((m) => m.email === email)) { toast('Email này đã có trong danh sách', true); return; }
     const { data, error } = await sb.from('members').insert({ email, role }).select().single();
     if (error) { toast(viErr(error), true); return; }
     S.members.push(data);
-    refresh(); toast(`Đã thêm ${email}. Gửi họ link app để đăng nhập.`);
+    refresh(); toast(`Đã cấp quyền cho ${displayName(email)}.`);
   });
 }
 
