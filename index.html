@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Kho Truyện</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 44 42'%3E%3Cpath d='M22 31C12 32 4 28 2 22C10 21 18 24 22 31ZM22 31C32 32 40 28 42 22C34 21 26 24 22 31Z' fill='%23F3DCDD' stroke='%23B9606F'/%3E%3Cpath d='M22 30C14 28 8 20 8 12C15 14 20 20 22 30ZM22 30C30 28 36 20 36 12C29 14 24 20 22 30Z' fill='%23F3DCDD' stroke='%23B9606F'/%3E%3Cpath d='M22 5C27 13 27 23 22 30C17 23 17 13 22 5Z' fill='%23FBF6EB' stroke='%23B9606F'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="cloud" viewBox="0 0 120 60">
+      <path d="M8 46C2 46 2 36 10 35C8 26 18 22 24 27C26 16 40 14 45 22C50 10 68 12 70 24C78 18 90 24 87 33C98 32 102 44 94 46Z" fill="var(--paper-2)" stroke="var(--line-strong)" stroke-width="1.6"/>
+      <path d="M45 22c7 2 7 11 0 12c-5 0-6-6-1-7M70 24c-7 1-8 10-1 11c5 0 6-5 2-6M24 27c6 2 5 9-1 9c-3 0-4-3-1-4M87 33c-4 0-6 6-1 7" fill="none" stroke="var(--line-strong)" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M94 46C104 46 108 53 118 50M2 52C14 55 26 50 36 54" fill="none" stroke="var(--line-strong)" stroke-width="1.4" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="lotus" viewBox="0 0 44 42">
+      <ellipse cx="22" cy="37" rx="15" ry="3" fill="var(--leaf-soft)" stroke="var(--leaf)" stroke-width="1"/>
+      <path d="M22 31C12 32 4 28 2 22C10 21 18 24 22 31ZM22 31C32 32 40 28 42 22C34 21 26 24 22 31Z" fill="var(--lotus-soft)" stroke="var(--lotus)" stroke-width="1.1"/>
+      <path d="M22 30C14 28 8 20 8 12C15 14 20 20 22 30ZM22 30C30 28 36 20 36 12C29 14 24 20 22 30Z" fill="var(--lotus-soft)" stroke="var(--lotus)" stroke-width="1.1"/>
+      <path d="M22 5C27 13 27 23 22 30C17 23 17 13 22 5Z" fill="var(--paper-2)" stroke="var(--lotus)" stroke-width="1.1"/>
+      <circle cx="22" cy="27" r="2" fill="var(--gold)"/>
+    </symbol>
+    <symbol id="ext" viewBox="0 0 12 12"><path d="M5 2H2v8h8V7M7 2h3v3M10 2 5.5 6.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <div id="app"><div class="center"><p class="muted">Đang tải…</p></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <noscript><p style="padding:24px">App cần bật JavaScript để chạy.</p></noscript>
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
