@@ -57,6 +57,12 @@ grant execute on function public.my_role() to authenticated;
 alter table public.members enable row level security;
 alter table public.stories enable row level security;
 
+-- Quyền truy cập bảng: chỉ người đã đăng nhập (project mới của Supabase không tự cấp nữa).
+-- Ai được làm gì cụ thể vẫn do các policy RLS bên dưới quyết định.
+revoke all on public.stories, public.members from anon;
+revoke truncate, references, trigger on public.stories, public.members from authenticated;
+grant select, insert, update, delete on public.stories, public.members to authenticated;
+
 -- members: ai cũng xem được dòng của mình; Admin xem và sửa tất cả
 drop policy if exists members_select on public.members;
 create policy members_select on public.members for select to authenticated
